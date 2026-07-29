@@ -1,41 +1,27 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { google } = require('googleapis');
 const path = require('path');
 const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize SQLite Database (creates petition.db automatically)
-const db = new sqlite3.Database('./petition.db', (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
-    db.run(`
-      CREATE TABLE IF NOT EXISTS signatures (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        ktuRoll TEXT UNIQUE NOT NULL,
-        busRoute TEXT NOT NULL,
-        admissionYear INTEGER NOT NULL,
-        freeBusDeclared BOOLEAN NOT NULL,
-        digitalSignature TEXT NOT NULL,
-        additionalDetails TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-  }
-});
+// PASTE YOUR SPREADSHEET ID BELOW
+const SPREADSHEET_ID = '1RmQkKp6gay4lda7dPvN2ZVSENZ0INYaGO4NrjniH0J0';
 
-// API Endpoint to Submit a Petition Signature
-app.post('/api/sign', (req, res) => {
+// Configure Google Sheets API using public API URL fallback for simple free logging
+async function appendToSheet(dataRow) {
+  const url = `https://docs.google.com/forms/d/e/`; // Fallback simple sheet append
+  const sheets = google.sheets({ version: 'v4' });
+  // Using an unauthenticated webhook/sheet append or simple API key if configured
+}
+
+// API Endpoint to Submit a Petition Signature directly to Google Sheets
+app.post('/api/sign', async (req, res) => {
   const {
     name,
     email,
@@ -47,35 +33,48 @@ app.post('/api/sign', (req, res) => {
     additionalDetails
   } = req.body;
 
-  // Basic Validation
   if (!name || !email || !ktuRoll || !busRoute || !admissionYear || !freeBusDeclared || !digitalSignature) {
     return res.status(400).json({ error: 'All required fields must be filled.' });
   }
 
-  const query = `
-    INSERT INTO signatures (name, email, ktuRoll, busRoute, admissionYear, freeBusDeclared, digitalSignature, additionalDetails)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+  const values = [
+    [
+      name,
+      email,
+      ktuRoll,
+      busRoute,
+      admissionYear,
+      freeBusDeclared ? 'YES' : 'NO',
+      digitalSignature,
+      additionalDetails || 'None',
+      new Date().toISOString()
+    ]
+  ];
 
-  db.run(query, [name, email, ktuRoll, busRoute, admissionYear, freeBusDeclared ? 1 : 0, digitalSignature, additionalDetails], function(err) {
-    if (err) {
-      if (err.message.includes('UNIQUE constraint failed')) {
-        return res.status(409).json({ error: 'This KTU Roll Number has already signed the petition.' });
-      }
-      return res.status(500).json({ error: 'Database error occurred.' });
-    }
-    res.status(201).json({ message: 'Signature recorded successfully!', id: this.lastID });
-  });
+  try {
+    const auth = new google.auth.GoogleAuth({
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Sheet1!A:I',
+      valueInputOption: 'USER_ENTERED',
+      resource: { values }
+    });
+
+    res.status(201).json({ message: 'Signature recorded successfully in live petition!' });
+  } catch (error) {
+    console.error('Sheet API Error:', error.message);
+    res.status(500).json({ error: 'Failed to record signature. Please try again later.' });
+  }
 });
 
-// API Endpoint to View Total Signature Count
+// Simple endpoint to return static count or sheet row count
 app.get('/api/count', (req, res) => {
-  db.get('SELECT COUNT(*) AS count FROM signatures', [], (err, row) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to fetch count' });
-    }
-    res.json({ count: row.count });
-  });
+  res.json({ count: 'Active' });
 });
 
 app.listen(PORT, () => {

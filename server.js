@@ -1,5 +1,4 @@
 const express = require('express');
-const { google } = require('googleapis');
 const path = require('path');
 const cors = require('cors');
 
@@ -10,17 +9,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// PASTE YOUR SPREADSHEET ID BELOW
-const SPREADSHEET_ID = '1RmQkKp6gay4lda7dPvN2ZVSENZ0INYaGO4NrjniH0J0';
+// Your verified SheetDB API URL
+const SHEETDB_URL = 'https://sheetdb.io/api/v1/fmp58vvvv41lc';
 
-// Configure Google Sheets API using public API URL fallback for simple free logging
-async function appendToSheet(dataRow) {
-  const url = `https://docs.google.com/forms/d/e/`; // Fallback simple sheet append
-  const sheets = google.sheets({ version: 'v4' });
-  // Using an unauthenticated webhook/sheet append or simple API key if configured
-}
-
-// API Endpoint to Submit a Petition Signature directly to Google Sheets
+// API Endpoint to Submit a Petition Signature
 app.post('/api/sign', async (req, res) => {
   const {
     name,
@@ -37,44 +29,55 @@ app.post('/api/sign', async (req, res) => {
     return res.status(400).json({ error: 'All required fields must be filled.' });
   }
 
-  const values = [
-    [
-      name,
-      email,
-      ktuRoll,
-      busRoute,
-      admissionYear,
-      freeBusDeclared ? 'YES' : 'NO',
-      digitalSignature,
-      additionalDetails || 'None',
-      new Date().toISOString()
+  // Clean payload: matches Row 1 headers character-for-character
+  const payload = {
+    data: [
+      {
+        "name": String(name).trim(),
+        "email": String(email).trim(),
+        "ktuRoll": String(ktuRoll).trim().toUpperCase(),
+        "busRoute": String(busRoute).trim(),
+        "admissionYear": String(admissionYear).trim(),
+        "freeBusDeclared": freeBusDeclared ? "YES" : "NO",
+        "digitalSignature": String(digitalSignature).trim(),
+        "additionalDetails": additionalDetails ? String(additionalDetails).trim() : "None"
+      }
     ]
-  ];
+  };
 
   try {
-    const auth = new google.auth.GoogleAuth({
-      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    const response = await fetch(SHEETDB_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
 
-    const sheets = google.sheets({ version: 'v4', auth });
-    
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'Sheet1!A:I',
-      valueInputOption: 'USER_ENTERED',
-      resource: { values }
-    });
+    const result = await response.json();
 
-    res.status(201).json({ message: 'Signature recorded successfully in live petition!' });
+    if (response.ok && !result.error) {
+      res.status(201).json({ message: 'Signature recorded successfully in live petition!' });
+    } else {
+      console.error('SheetDB Error:', JSON.stringify(result));
+      res.status(500).json({ error: 'Database rejected format. Please verify Row 1 headers in Google Sheet.' });
+    }
   } catch (error) {
-    console.error('Sheet API Error:', error.message);
-    res.status(500).json({ error: 'Failed to record signature. Please try again later.' });
+    console.error('Server Error:', error.message);
+    res.status(500).json({ error: 'Network error. Could not connect to database.' });
   }
 });
 
-// Simple endpoint to return static count or sheet row count
-app.get('/api/count', (req, res) => {
-  res.json({ count: 'Active' });
+// Endpoint to View Total Signature Count
+app.get('/api/count', async (req, res) => {
+  try {
+    const response = await fetch(SHEETDB_URL);
+    const data = await response.json();
+    res.json({ count: Array.isArray(data) ? data.length : 0 });
+  } catch (error) {
+    res.json({ count: 'Active' });
+  }
 });
 
 app.listen(PORT, () => {

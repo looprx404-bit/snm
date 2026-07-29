@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Petition | SNMIMT Bus Fee Issue</title>
+  <style>
+    :root {
+      --primary: #b91c1c;
+      --primary-hover: #991b1b;
+      --bg: #f8fafc;
+      --text: #0f172a;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem 1rem; }
+    .container { max-width: 750px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 2rem; }
+    h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; text-transform: uppercase; }
+    .subtitle { font-weight: 600; color: #475569; font-size: 0.95rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+    .petition-body { font-size: 0.95rem; margin-bottom: 1.5rem; background: #fff1f2; border-left: 4px solid var(--primary); padding: 1rem; border-radius: 4px; }
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    input, select, textarea { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    .checkbox-group { display: flex; align-items: flex-start; gap: 0.6rem; margin: 1.5rem 0; background: #f1f5f9; padding: 1rem; border-radius: 6px; }
+    .checkbox-group input { width: auto; margin-top: 4px; }
+    .checkbox-group label { font-weight: 500; font-size: 0.88rem; cursor: pointer; margin: 0; }
+    button { width: 100%; background: var(--primary); color: white; border: none; padding: 0.8rem; font-size: 1rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: var(--primary-hover); }
+    .status-msg { margin-top: 1rem; padding: 0.8rem; border-radius: 4px; text-align: center; display: none; font-weight: 600; }
+    .success { background: #dcfce7; color: #166534; display: block; }
+    .error { background: #fee2e2; color: #991b1b; display: block; }
+    .counter { text-align: center; font-size: 1.1rem; font-weight: bold; margin-bottom: 1.5rem; color: #334155; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Student Petition Against Unfair Bus Fees</h1>
+      <p class="subtitle">SNM Institute of Management and Technology (SNMIMT), Maliankara [INDEX 1.2.1]</p>
+    </header>
+
+    <div class="counter" id="signatureCount">Loading total signatures...</div>
+
+    <div class="card">
+      <div class="petition-body">
+        <strong>TO: The Principal, SNMIMT College Management, APJ Abdul Kalam Technological University (KTU), and Respected Legal/Police Authorities.</strong><br><br>
+        We, the undersigned students of SNMIMT, formally raise this grievance regarding the sudden demand for college bus transportation fees. At the time of our admission, the institution explicitly offered and promoted <strong>Free Transportation for the entire 4-year academic program</strong> as documented in institutional brochures and admission notices. Asking us to pay transportation fees midway violates the commitment made to students and parents. We request immediate intervention to restore free transportation as originally offered.
+      </div>
+
+      <form id="petitionForm">
+        <div class="form-group">
+          <label for="name">Full Name (as per KTU records) *</label>
+          <input type="text" id="name" required placeholder="e.g., Arjun K">
+        </div>
+
+        <div class="form-group">
+          <label for="email">Student Email Address *</label>
+          <input type="email" id="email" required placeholder="e.g., arjun@example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="ktuRoll">KTU Roll Number / Register Number *</label>
+          <input type="text" id="ktuRoll" required placeholder="e.g., SNM20CS001" style="text-transform: uppercase;">
+        </div>
+
+        <div class="form-group">
+          <label for="busRoute">College Bus Route *</label>
+          <input type="text" id="busRoute" required placeholder="e.g., Aluva / North Paravur / Kodungallur">
+        </div>
+
+        <div class="form-group">
+          <label for="admissionYear">Year of Admission *</label>
+          <select id="admissionYear" required>
+            <option value="">Select Admission Year</option>
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+          </select>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="freeBusDeclared" required>
+          <label for="freeBusDeclared">
+            <strong>Declaration of Facts:</strong> I solemnly declare that at the time of my admission, SNMIMT College explicitly offered free bus service for the entire 4-year B.Tech program. I affirm that the information provided here is true to the best of my knowledge.
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="digitalSignature">Digital Signature (Type your full legal name) *</label>
+          <input type="text" id="digitalSignature" required placeholder="Type full name to sign digitally">
+        </div>
+
+        <div class="form-group">
+          <label for="additionalDetails">Additional Details / Comments (Optional)</label>
+          <textarea id="additionalDetails" rows="3" placeholder="Any specific details regarding your admission brochure, route fees asked, etc."></textarea>
+        </div>
+
+        <button type="submit">Sign the Petition</button>
+        <div id="statusMessage" class="status-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('petitionForm');
+    const statusMsg = document.getElementById('statusMessage');
+    const countDisplay = document.getElementById('signatureCount');
+
+    // Fetch live count of signatures
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/count');
+        const data = await res.json();
+        countDisplay.innerHTML = `Total Verified Student Signatures: <span style="color:#b91c1c;">${data.count}</span>`;
+      } catch (err) {
+        countDisplay.textContent = 'Petition against SNMIMT Bus Fee Policy';
+      }
+    }
+
+    fetchCount();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-msg';
+      statusMsg.style.display = 'none';
+
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        ktuRoll: document.getElementById('ktuRoll').value.trim().toUpperCase(),
+        busRoute: document.getElementById('busRoute').value.trim(),
+        admissionYear: parseInt(document.getElementById('admissionYear').value),
+        freeBusDeclared: document.getElementById('freeBusDeclared').checked,
+        digitalSignature: document.getElementById('digitalSignature').value.trim(),
+        additionalDetails: document.getElementById('additionalDetails').value.trim()
+      };
+
+      try {
+        const response = await fetch('/api/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          statusMsg.textContent = result.message;
+          statusMsg.classList.add('success');
+          form.reset();
+          fetchCount();
+        } else {
+          statusMsg.textContent = result.error || 'Something went wrong.';
+          statusMsg.classList.add('error');
+        }
+      } catch (error) {
+        statusMsg.textContent = 'Network error. Please try again later.';
+        statusMsg.classList.add('error');
+      }
+    });
+  </script>
+</body>
+</html>
